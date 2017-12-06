@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="Project 3:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/Project_3_jar</output-path>
+    <root id="archive" name="Project 3.jar">
+      <element id="module-output" name="Project 3" />
+      <element id="extracted-dir" path="$USER_HOME$/Rate-Monotonic-Scheduler/commons-lang3-3.7-bin/commons-lang3-3.7.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

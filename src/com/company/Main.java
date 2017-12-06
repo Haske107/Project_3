@@ -57,7 +57,7 @@ public class Main {
 
 
         // TIMED BinarySemaphore
-        TimedSemaphore Scheduler_BinarySemaphore = new TimedSemaphore(10, TimeUnit.MILLISECONDS, 1);
+        TimedSemaphore Scheduler_BinarySemaphore = new TimedSemaphore(100, TimeUnit.MILLISECONDS, 1);
 
         // CREATE NEW SCHEDULER
         Scheduler Scheduler = new Scheduler(
@@ -85,13 +85,16 @@ public class Main {
 
         try {
             Scheduler.join();
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }finally{
             for (String a : Results)
             {
                 System.out.println(a);
             }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
+
 
     }
 }

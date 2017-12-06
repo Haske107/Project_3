@@ -1,5 +1,7 @@
 package com.company;
 
+
+
 import org.apache.commons.lang3.concurrent.TimedSemaphore;
 
 import java.util.ArrayList;
@@ -45,6 +47,8 @@ public class Scheduler extends Thread {
     private Worker W2;
     private Worker W4;
     private Worker W16;
+
+    ExecutorService executor = Executors.newSingleThreadExecutor();
 
 
 
@@ -97,12 +101,34 @@ public void run()    {
 
        Scheduler_BinarySemaphore.acquire();
 
-        Time = System.nanoTime();
         IntStream.range(0,160).forEach(iteration ->   {
             try {
-                Period.run();
-            }   catch (Exception e) { }
-            Time = System.nanoTime();
+                Future<?> handle = executor.submit(Period);
+                handle.get(100, TimeUnit.MILLISECONDS);
+            }   catch (Exception e) {
+                try {
+                    Worker1_BinarySemaphore.doNotify();
+                } catch (Exception el) {
+
+                }
+                try {
+                    Worker2_BinarySemaphore.doNotify();
+                } catch (Exception el) {
+
+                }
+                try {
+                    Worker4_BinarySemaphore.doNotify();
+                } catch (Exception el) {
+
+                }
+                try {
+                    Worker16_BinarySemaphore.doNotify();
+                } catch (Exception el) {
+
+                }
+
+            }
+
         });
     } catch(Exception e)   {
     }
@@ -119,35 +145,60 @@ public void run()    {
 
 private Runnable Period = new Runnable() {
     public void run()   {
-        Results.add("----------------------------------" + (System.nanoTime()-Time)/1000);
+        Time = System.nanoTime();
+
         try {
-            // BinarySemaphore ACQUIRE
+            Results.add("Scheduler Waiting");
             Scheduler_BinarySemaphore.acquire();
             Results.add("Scheduler Acquired");
+
             try {
+                if (W1.state == 1){
+                    Worker1_BinarySemaphore.doNotify();
+                    Results.add("Worker " + 160/W1.Iterations + " notified" );
+                }
                 Worker_Period(W1,Worker1_BinarySemaphore,Worker1_Overrun_Counter, Worker1_Counter);
             }   catch (Exception e) {
 
             }
             try {
-                if(Program_Counter.get() % 2 ==0)
-                Worker_Period(W2,Worker2_BinarySemaphore,Worker2_Overrun_Counter, Worker2_Counter);
+                if(Program_Counter.get() % 2 ==0) {
+                    if (W2.state == 1){
+                        Worker2_BinarySemaphore.doNotify();
+                        Results.add("Worker " + 160/W2.Iterations + " notified" );
+                    }
+                    Worker_Period(W2, Worker2_BinarySemaphore, Worker2_Overrun_Counter, Worker2_Counter);
+                }
             }   catch (Exception e) {
 
             }
             try {
-                if(Program_Counter.get() % 4 == 0)
-                Worker_Period(W4,Worker4_BinarySemaphore,Worker4_Overrun_Counter, Worker4_Counter);
+                if(Program_Counter.get() % 4 == 0) {
+                    if (W4.state == 1) {
+                        Worker4_BinarySemaphore.doNotify();
+                        Results.add("Worker " + 160 / W4.Iterations + " notified");
+                    }
+                    Worker_Period(W4, Worker4_BinarySemaphore, Worker4_Overrun_Counter, Worker4_Counter);
+                }
             }   catch (Exception e) {
 
             }
             try {
-                if (Program_Counter.get() % 16 == 0)
-                Worker_Period(W16,Worker16_BinarySemaphore,Worker16_Overrun_Counter, Worker16_Counter);
+                if (Program_Counter.get() % 16 == 0) {
+                    if (W16.state == 1) {
+                        Worker16_BinarySemaphore.doNotify();
+                        Results.add("Worker " + 160 / W16.Iterations + " notified");
+                    }
+                    Worker_Period(W16, Worker16_BinarySemaphore, Worker16_Overrun_Counter, Worker16_Counter);
+                }
             }   catch (Exception e) {
 
             }
+            Results.add("----------------------------------" + (System.nanoTime()-Time)/100000);
+
             Program_Counter.incrementAndGet();
+            // BinarySemaphore ACQUIRE
+
         } catch (Exception e)   {
 
         }
@@ -167,7 +218,7 @@ private Runnable Period = new Runnable() {
 
             }
         }
-            if (ProgramCounter.get() != 0 && !worker.isDone) {
+            if (ProgramCounter.get() != 0 && worker.state < 2) {
                 OverrunCounter.incrementAndGet();
             }
         BinarySemaphore.doNotify();

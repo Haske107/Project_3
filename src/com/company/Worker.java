@@ -9,7 +9,7 @@ public class Worker extends Thread implements Runnable  {
 
     private AtomicInteger Worker_Counter;
     private BinarySemaphore BinarySemaphore;
-    public boolean isDone = false;
+    public int state = 0;
     public int Iterations;
     private double[][] matrix;
     private List<String> Results;
@@ -19,9 +19,9 @@ public class Worker extends Thread implements Runnable  {
         this.BinarySemaphore = BinarySemaphore;
         this.Worker_Counter = Worker_Counter;
         this.Results = Results;
-        matrix = new double[1000][1000];
-        for (int i = 0; i < 1000; ++i) {
-            for (int j = 0; j < 1000; ++j) {
+        matrix = new double[10000][10000];
+        for (int i = 0; i < 10000; ++i) {
+            for (int j = 0; j < 10000; ++j) {
                 matrix[i][j] = 1;
             }
         }
@@ -29,6 +29,7 @@ public class Worker extends Thread implements Runnable  {
 
     @Override
     public void start() {
+
         run();
     }
 
@@ -40,6 +41,7 @@ public class Worker extends Thread implements Runnable  {
             for (int i = 0; i < Iterations; ++i) {
                 Results.add("Worker " + 160/Iterations + " Waiting");
                 BinarySemaphore.doWait();
+                state = 1;
                 Results.add("Worker " + 160/Iterations + " Acquired");
                 for(int j = 0; j < 160 / Iterations; ++j)    {
                     doWork();
@@ -47,17 +49,16 @@ public class Worker extends Thread implements Runnable  {
                 }
                 Worker_Counter.incrementAndGet();
 
-                isDone = true;
+                state = 2;
                 Results.add("Worker " + 160/Iterations + " Done ");
             }
         } catch (Exception e) {
-        } finally {
 
         }
     }
 
     private void doWork()    {
-        for (int i = 0; i < 100000; ++i) {
+        for (int i = 0; i < 10000; ++i) {
             matrix[new Random().nextInt(100)][new Random().nextInt(100)]
                     = matrix[new Random().nextInt(100)][new Random().nextInt(100)] * 5.2323223586654321;
         }
