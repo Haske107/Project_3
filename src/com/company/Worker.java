@@ -5,11 +5,11 @@ import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class Worker extends Thread implements Runnable, Callable<Worker> {
+public class Worker extends Thread implements Runnable  {
 
     private AtomicInteger Worker_Counter;
     private BinarySemaphore Semaphore;
-    private int Iterations;
+    public int Iterations;
     private double[][] matrix;
 
     Worker(int Iterations, BinarySemaphore semaphore, AtomicInteger Worker_Counter)   {
@@ -26,26 +26,22 @@ public class Worker extends Thread implements Runnable, Callable<Worker> {
 
     @Override
     public void start() {
-        System.out.println("Worker " + Iterations/160 + " Started");
+        System.out.println("Worker " + 160/Iterations + " Started");
         run();
     }
 
-    @Override
-    public Worker call(){
-        start();
-        return null;
-    }
+
 
     @Override
     public void run() {
         try {
             for (int i = 0; i < Iterations; ++i) {
                 Semaphore.acquire();
-                System.out.println("Worker " + Iterations/160 + " Acquired");
+                System.out.println("Worker " + 160/Iterations + " Acquired");
                 for(int j = 0; j < 160 / Iterations; ++j)    {
                     doWork();
                     Worker_Counter.incrementAndGet();
-                    System.out.println("Worker " + Iterations/160 + " Working");
+                    System.out.println("Worker " + 160/Iterations + " Working");
                 }
             }
         } catch (Exception e) {
