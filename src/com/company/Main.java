@@ -2,6 +2,8 @@ package com.company;
 
 import org.apache.commons.lang3.concurrent.TimedSemaphore;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -17,6 +19,9 @@ public class Main {
         // PROGRAM COUNTER
         AtomicInteger Program_Counter = new AtomicInteger(0);
 
+        // RESULTS
+        List<String> Results = new ArrayList<>();
+
         // COUNTERS
         AtomicInteger Worker1_Counter = new AtomicInteger(0);
         AtomicInteger Worker2_Counter = new AtomicInteger(0);
@@ -29,17 +34,17 @@ public class Main {
         AtomicInteger Worker4_Overrun_Counter = new AtomicInteger(0);
         AtomicInteger Worker16_Overrun_Counter = new AtomicInteger(0);
 
-        // WORKER SEMAPHORES
-        BinarySemaphore Worker1_Semaphore = new BinarySemaphore( true);
-        BinarySemaphore Worker2_Semaphore = new BinarySemaphore(true);
-        BinarySemaphore Worker4_Semaphore = new BinarySemaphore(true);
-        BinarySemaphore Worker16_Semaphore = new BinarySemaphore(true);
+        // WORKER BinarySemaphoreS
+        BinarySemaphore Worker1_BinarySemaphore = new BinarySemaphore(1 );
+        BinarySemaphore Worker2_BinarySemaphore = new BinarySemaphore(1);
+        BinarySemaphore Worker4_BinarySemaphore = new BinarySemaphore(1);
+        BinarySemaphore Worker16_BinarySemaphore = new BinarySemaphore(1);
 
         // CREATE NEW WORKER THREADS
-        Worker W1 = new Worker(160, Worker1_Semaphore, Worker1_Counter);
-        Worker W2 = new Worker(80, Worker2_Semaphore, Worker2_Counter);
-        Worker W3 = new Worker(40, Worker4_Semaphore, Worker4_Counter);
-        Worker W4 = new Worker(10, Worker16_Semaphore, Worker16_Counter);
+        Worker W1 = new Worker(160, Worker1_BinarySemaphore, Worker1_Counter, Results);
+        Worker W2 = new Worker(80, Worker2_BinarySemaphore, Worker2_Counter, Results);
+        Worker W3 = new Worker(40, Worker4_BinarySemaphore, Worker4_Counter, Results);
+        Worker W4 = new Worker(10, Worker16_BinarySemaphore, Worker16_Counter, Results);
 
         // SET PRIORITIES
         W1.setPriority(8);
@@ -49,27 +54,15 @@ public class Main {
 
 
        Thread.currentThread().setPriority(10);
-       /* try {
-            Worker1_Semaphore.acquire();
-            Worker2_Semaphore.acquire();
-            Worker4_Semaphore.acquire();
-            Worker16_Semaphore.acquire();
-        }   catch (Exception e)  { }
-*/
-//        Future<?> W1_Handle = Executor.submit(W1);
-//        Future<?> W2_Handle = Executor.submit(W2);
-//        Future<?> W3_Handle = Executor.submit(W3);
-//        Future<?> W4_Handle = Executor.submit(W4);
 
 
-
-        // TIMED SEMAPHORE
-        TimedSemaphore Scheduler_Semaphore = new TimedSemaphore(400, TimeUnit.MILLISECONDS, 1);
+        // TIMED BinarySemaphore
+        TimedSemaphore Scheduler_BinarySemaphore = new TimedSemaphore(10, TimeUnit.MILLISECONDS, 1);
 
         // CREATE NEW SCHEDULER
         Scheduler Scheduler = new Scheduler(
                 W1, W2, W3, W4,
-                Scheduler_Semaphore,
+                Scheduler_BinarySemaphore,
                 Program_Counter,
                 Worker1_Counter,
                 Worker2_Counter,
@@ -79,16 +72,26 @@ public class Main {
                 Worker2_Overrun_Counter,
                 Worker4_Overrun_Counter,
                 Worker16_Overrun_Counter,
-                Worker1_Semaphore,
-                Worker2_Semaphore,
-                Worker4_Semaphore,
-                Worker16_Semaphore
+                Worker1_BinarySemaphore,
+                Worker2_BinarySemaphore,
+                Worker4_BinarySemaphore,
+                Worker16_BinarySemaphore,
+                Results
         );
         Scheduler.setPriority(9);
 
 
         Scheduler.start();
 
+        try {
+            Scheduler.join();
+            for (String a : Results)
+            {
+                System.out.println(a);
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
     }
 }

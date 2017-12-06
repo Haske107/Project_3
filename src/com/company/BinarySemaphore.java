@@ -1,27 +1,40 @@
 package com.company;
 
 
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class BinarySemaphore {
 
-    public final Semaphore countingSemaphore;
+    private ReentrantLock lock;
+    private int count;
+    private Condition cv;
 
-    public BinarySemaphore(boolean available) {
-        if (available) {
-            countingSemaphore = new Semaphore(1, true);
-        } else {
-            countingSemaphore = new Semaphore(0, true);
+
+    BinarySemaphore(int count)
+    {
+        this.lock = new ReentrantLock();
+        this.count = count;
+        this.cv = this.lock.newCondition();
+    }
+
+
+    public void doNotify()
+    {
+        lock.unlock();
+        ++count;
+        cv.notify();
+    }
+
+    void doWait() throws InterruptedException
+    {
+        lock.lock();
+        while(count == 0)
+        {
+            cv.wait();
         }
+        --count;
     }
 
-    public void acquire() throws InterruptedException {
-        countingSemaphore.acquire();
-    }
 
-    public synchronized void release() {
-        if (countingSemaphore.availablePermits() != 1) {
-            countingSemaphore.release();
-        }
-    }
 }
